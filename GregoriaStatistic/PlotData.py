@@ -9,8 +9,8 @@ file_path = 'GregoriaStatistic\QuarterFinal_GregoriaMariskaTunjungVsKimGaEun.xls
 df = pd.read_excel(file_path)
 
 # Load support file
-gregoria_marker = plt.imread('GregoriaStatistic\SourceSupport\Gregoria.png')
-kim_marker = plt.imread('GregoriaStatistic\SourceSupport/Kim.png')
+gregoria_marker = plt.imread('GregoriaStatistic\SourceSupport\Gregoria_Crop.png')
+kim_marker = plt.imread('GregoriaStatistic\SourceSupport\Kim_Crop.png')
 
 # Initialize a dictionary to store data by set
 data_by_set = {}
@@ -28,7 +28,7 @@ for number_of_set in df['Set'].unique():
 colors = sns.color_palette("flare", 3)
 
 # Custom marker 
-def custom_marker(image, zoom=0.05):
+def custom_marker(image, zoom=0.06):
     return OffsetImage(image, zoom=zoom)
 
 # Plotting the data for each set
@@ -42,8 +42,17 @@ for set_number in data_by_set:
     plt.style.use('dark_background')  # Set a dark background style
 
     # Plot each line
-    plt.plot(total_point, gregoria_point, label='Gregoria Points', color=colors[0], marker='o', linewidth=2)
-    plt.plot(total_point, kim_point, label='Kim Points', color=colors[1], marker='o', linewidth=2)
+    plt.plot(total_point, gregoria_point, label='Gregoria Points', color=colors[0], marker='o', linewidth=1.5)
+    plt.plot(total_point, kim_point, label='Kim Points', color=colors[1], marker='o', linewidth=1.5)
+
+    # Determine who reaches 11 points first and add the corresponding marker
+    gregoria_11_index = next((i for i, val in enumerate(gregoria_point) if val >= 11), None)
+    kim_11_index = next((i for i, val in enumerate(kim_point) if val >= 11), None)
+
+    if gregoria_11_index is not None and (kim_11_index is None or gregoria_11_index <= kim_11_index):
+        plt.plot(total_point[gregoria_11_index], gregoria_point[gregoria_11_index], label='Leading Half Set', color=colors[0], marker='*', markersize=12)
+    elif kim_11_index is not None and (gregoria_11_index is None or kim_11_index <= gregoria_11_index):
+        plt.plot(total_point[kim_11_index], kim_point[kim_11_index], label='Leading Half Set', color=colors[1], marker='*', markersize=12)
 
     if max(gregoria_point) > max(kim_point):
       max_index = gregoria_point.index(max(gregoria_point))
