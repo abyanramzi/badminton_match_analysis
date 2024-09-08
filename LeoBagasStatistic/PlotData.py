@@ -23,7 +23,7 @@ for number_of_set in df['Set'].unique():
 
 # Define a color palette suitable for dark backgrounds
 colors = sns.color_palette("BrBG", 10)
-colors2 = sns.color_palette("Reds", 10)
+colors2 = sns.color_palette("YlOrRd", 10)
 
 # Plotting the data for each set
 for set_number in data_by_set:
@@ -50,7 +50,7 @@ for set_number in data_by_set:
         bagaspoint.append(bagastotal)
     
     # Create a figure and axis
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(12, 4))
     plt.style.use('dark_background')  # Set a dark background style
 
     # Plot each line
@@ -58,21 +58,23 @@ for set_number in data_by_set:
     plt.bar(total_point, leopoint, label='Leo Point', color=colors[2])
     plt.bar(total_point, bagaspoint, bottom=leopoint, label='Bagas Point', color=colors[8])
 
-    plt.plot(total_point, kangseo_point, label='Kang/Seo Points', color=colors2[5], marker='o', linewidth=2)
+    plt.plot(total_point, kangseo_point, label='Kang/Seo Points', color=colors2[8], marker='o', linewidth=2)
 
     if max(kangseo_point) > max(leobagas_point):
-      plt.plot(max(total_point), max(kangseo_point), color = "yellow", marker = "*", markersize=12)
+      plt.plot(max(total_point), max(kangseo_point), color = colors2[1], marker = "*", markersize=12, label='Win')
+      plt.plot(max(total_point), max(leobagas_point), color = colors2[9], marker = "X", markersize=12, label='Lose')
     if max(leobagas_point) > max(kangseo_point):
-      plt.plot(max(total_point), max(leobagas_point), color = "yellow", marker = "*", markersize=12)
+      plt.plot(max(total_point), max(leobagas_point), color = colors2[1], marker = "*", markersize=12, label='Win')
+      plt.plot(max(total_point), max(kangseo_point), color = colors2[9], marker = "X", markersize=12, label='Lose')
 
     # Adding titles and labels
-    plt.title(f'Set {int(set_number)} Performance', fontsize=16, fontweight='bold', color='white')
-    plt.xlabel('Total Points', fontsize=12, color='white')
-    plt.ylabel('Points', fontsize=12, color='white')
+    plt.title(f'Set {set_number} Performance', fontsize=16, fontweight='bold', color='white')
+    plt.xlabel('Total Points/Match', fontsize=12, color='white')
+    plt.ylabel('Total Points/Team', fontsize=12, color='white')
     plt.legend(loc='upper left', fontsize=10)
 
     # Customize the grid
-    plt.grid(True, linestyle='--', alpha=0.5)
+    plt.grid(True, linestyle='--', alpha=0.2)
 
     # Set grid lines to appear every 2 points
     plt.xticks(np.arange(min(total_point), max(total_point) + 3, 2), color='white')
