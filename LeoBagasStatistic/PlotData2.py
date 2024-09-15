@@ -4,7 +4,7 @@ import seaborn as sns
 import numpy as np
 
 # Load the spreadsheet file
-file_path = 'LeoBagasStatistic\JapanOpen_LeoBagas.xlsx'
+file_path = 'LeoBagasStatistic\KoreaOpen_LeoBagas.xlsx'
 df = pd.read_excel(file_path)
 
 # Initialize a dictionary to store data by set
@@ -22,70 +22,117 @@ for number_of_set in df['Set'].unique():
     }
 
 # Define a color palette suitable for dark backgrounds
-colors = sns.color_palette("flare", 3)
+colors = sns.color_palette("PuBu", 10)
 
-# Plotting the data for each set
+# Step 1: Determine the global maximum value for the x-axis limit across all sets
+global_max_hits = 0
 for set_number in data_by_set:
     total_point = data_by_set[set_number]['Total Points']
-    leobagas_point = data_by_set[set_number]['Leo/Bagas Points']
-    executor = data_by_set[set_number]["Executor"]
+    executor = data_by_set[set_number]['Executor']
     hit_type = data_by_set[set_number]['Hit Type']
+
+    hits_leo = {'Drive': 0, 'Smash': 0, 'Push Shot': 0, 'Lift': 0, 'Netting': 0, 'Serve': 0, 'Block': 0, 'Net Kill': 0, 'Clear': 0}
+    hits_bagas = {'Drive': 0, 'Smash': 0, 'Push Shot': 0, 'Lift': 0, 'Netting': 0, 'Serve': 0, 'Block': 0, 'Net Kill': 0, 'Clear': 0}
+
+    # Count hit types for each player
+    for i in range(len(total_point)):
+        exec = str(executor[i])
+        current_hit_type = hit_type[i]
+
+        if exec == "Leo":
+            if current_hit_type in hits_leo:
+                hits_leo[current_hit_type] += 1
+        elif exec == "Bagas":
+            if current_hit_type in hits_bagas:
+                hits_bagas[current_hit_type] += 1
+
+    # Update the global maximum value of hits
+    max_hits_in_set = max(max(hits_leo.values()), max(hits_bagas.values()))
+    global_max_hits = max(global_max_hits, max_hits_in_set)
+
+# Step 2: Plot the data for each set using the same x-axis limit
+for set_number in data_by_set:
+    total_point = data_by_set[set_number]['Total Points']
+    executor = data_by_set[set_number]['Executor']
     point_status = data_by_set[set_number]['Point Status']
+    hit_type = data_by_set[set_number]['Hit Type']
 
-    leohit = []
-    bagashit = []
+    # Initialize hit counts for each player
+    hits_leo = {'Drive': 0, 'Smash': 0, 'Push Shot': 0, 'Lift': 0, 'Netting': 0, 'Serve': 0, 'Block': 0, 'Net Kill': 0, 'Clear': 0}
+    hits_bagas = {'Drive': 0, 'Smash': 0, 'Push Shot': 0, 'Lift': 0, 'Netting': 0, 'Serve': 0, 'Block': 0, 'Net Kill': 0, 'Clear': 0}
 
-    # Collect hit types for Leo and Bagas
-    for i in range(len(executor)):
-        exec = executor[i]
+    # Initialize cumulative points
+    leopoint = 0
+    bagaspoint = 0
+
+    # Count hit types and points for Leo and Bagas
+    for i in range(len(total_point)):
+        exec = str(executor[i])
         current_hit_type = hit_type[i]
         current_point_status = point_status[i]
 
-        if exec == "Leo" and current_point_status != "Fail":
-            leohit.append(current_hit_type)
-        elif exec == "Bagas" and current_point_status != "Fail":
-            bagashit.append(current_hit_type)
-
-    # Convert lists to Pandas Series and calculate value counts
-    leohit_series = pd.Series(leohit)
-    bagashit_series = pd.Series(bagashit)
-    
-    count_leohit = leohit_series.value_counts()
-    count_bagashit = bagashit_series.value_counts()
-
-    # Create a common index for both Leo and Bagas for the bar chart
-    hit_types = sorted(set(count_leohit.index).union(set(count_bagashit.index)))
-    index = np.arange(len(hit_types))
-
+        if current_point_status != "Fail":
+            if exec == "Leo":
+                if current_hit_type in hits_leo:
+                    hits_leo[current_hit_type] += 1
+                leopoint += 1
+            elif exec == "Bagas":
+                if current_hit_type in hits_bagas:
+                    hits_bagas[current_hit_type] += 1
+                bagaspoint += 1
+                
     # Create a figure and axis
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(18, 3))
     plt.style.use('dark_background')  # Set a dark background style
 
-    # Plot bar charts for Leo and Bagas points
-    bar_width = 0.4
-    
-    plt.bar(index - bar_width/2, count_leohit.reindex(hit_types, fill_value=0), width=bar_width, label='Leo Hits', color=colors[0])
-    plt.bar(index + bar_width/2, count_bagashit.reindex(hit_types, fill_value=0), width=bar_width, label='Bagas Hits', color=colors[1])
+    # Create the list of hit types and their counts for both players
+    hit_types = list(hits_leo.keys())
+    leo_hits = list(hits_leo.values())
+    bagas_hits = list(hits_bagas.values())
+
+    # Convert Bagas hits to negative values for diverging bar chart
+    bagas_hits_neg = [-x for x in bagas_hits]
+
+    # Plot the bars for Leo and Bagas (hit types)
+    bar_width = 0.8
+    indices = np.arange(len(hit_types))  # Create a list of positions for the bars
+
+    leo_bars = plt.barh(indices, leo_hits, height=bar_width, label="Leo Hit Types", color=colors[9])
+    bagas_bars = plt.barh(indices, bagas_hits_neg, height=bar_width, label="Bagas Hit Types", color=colors[7])
+
+    # Add annotations (hit values) on the bars
+    for i, (leo_val, bagas_val) in enumerate(zip(leo_hits, bagas_hits)):
+        # Place hit type names in the center between Leo and Bagas bars
+        plt.text(0, i, hit_types[i], va='center', ha='center', color=colors[0], fontsize=12, fontweight='bold')
+        if leo_val != 0:
+            # Annotate Leo bars
+            plt.text(leo_val - 0.05, i, f'{leo_val}', va='center', ha='right', color='white', fontsize=12, fontweight='bold')
+        if bagas_val != 0:
+            # Annotate Bagas bars (note the use of bagas_hits_neg for placement)
+            plt.text(bagas_hits_neg[i] + 0.05, i, f'{bagas_val}', va='center', ha='left', color='white', fontsize=12, fontweight='bold')
+        if leo_val == 0:
+            # Annotate Leo bars
+            plt.text(leo_val + 0.7, i, f'{leo_val}', va='center', ha='right', color='white', fontsize=12, fontweight='bold')
+        if bagas_val == 0:
+            # Annotate Bagas bars (note the use of bagas_hits_neg for placement)
+            plt.text(bagas_hits_neg[i] - 0.7, i, f'{bagas_val}', va='center', ha='left', color='white', fontsize=12, fontweight='bold')
 
     # Adding titles and labels
-    plt.title(f'Set {set_number} Hit Type Comparison', fontsize=16, fontweight='bold', color='white')
-    plt.xlabel('Hit Type', fontsize=12, color='white')
-    plt.ylabel('Count', fontsize=12, color='white')
-    plt.xticks(index, hit_types, color='white')  # Set x-ticks to be hit types
-    plt.legend(loc='upper left', fontsize=10)
+    plt.title(f'Set {int(set_number)}: Diverging Hit Types & Points Comparison for Leo and Bagas', fontsize=16, fontweight='bold', color='white')
 
-    # Customize the grid
-    plt.grid(True, linestyle='--', alpha=0.5)
+    # Step 3: Set the x-axis limits to the global maximum value for consistency
+    plt.xlim([-global_max_hits - 1, global_max_hits + 1])  # Use global maximum value for all sets
 
-    # Set grid lines to appear every 2 points
-    plt.yticks(np.arange(0, max(count_leohit.max(), count_bagashit.max())+3, 1), color='white')
+    # Hide both x-axis and y-axis
+    plt.xticks([])  # Hide x-axis ticks
+    plt.yticks([])  # Hide y-axis ticks
 
-    # Set the background color
+    # Set background color
     plt.gca().set_facecolor('black')  # Black background for the plot area
     plt.gcf().patch.set_facecolor('black')  # Black background for the figure
 
     # Adjust plot layout
-    plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
+    plt.tight_layout()
 
-    plt.savefig('LeoBagasStatistic/Images/' + f'set_{set_number}_type_hit.png', bbox_inches='tight', dpi=300)
+    plt.savefig('LeoBagasStatistic/Images/' + f'set_{int(set_number)}_type_hit.png', bbox_inches='tight', dpi=300)
     plt.close()
